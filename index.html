@@ -23,7 +23,7 @@
   </div>
 <script>
 (() => {
-  const paths=['chunks/flowchart-0.txt','chunks/flowchart-1.txt','chunks/flowchart-2.txt','chunks/flowchart-3.txt','chunks/flowchart-4.txt'];
+  const paths=['chunks/flowchart-0.txt','chunks/flowchart-1.txt','chunks/flowchart-2.txt','chunks/flowchart-3.txt'];
   const stage=document.getElementById('stage'), canvas=document.getElementById('canvas'), img=document.getElementById('flow'), miniImg=document.getElementById('miniImg'), hud=document.getElementById('hud'), frame=document.getElementById('frame'), viewport=document.getElementById('viewport'), loading=document.getElementById('loading');
   let scale=1,x=0,y=0,down=false,lastX=0,lastY=0;
   const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
