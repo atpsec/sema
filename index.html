@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sema Akış Diyagramı</title>
+  <meta name="description" content="Sema akış diyagramı için interaktif web görünümü.">
+  <style>
+    :root{--bg:#f6f8fb;--panel:#ffffffee;--text:#172033;--muted:#667085;--line:#d9e2ec;--accent:#0b89a8;--shadow:0 18px 45px #1620331f}
+    *{box-sizing:border-box}html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at 18% 8%,#16a7c824,transparent 28%),radial-gradient(circle at 90% 0,#ff5a6a1c,transparent 24%),var(--bg);color:var(--text);overflow:hidden}
+    .app{height:100%;display:grid;grid-template-rows:auto 1fr;gap:14px;padding:14px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px 14px;box-shadow:var(--shadow);backdrop-filter:blur(10px)}
+    h1{font-size:clamp(18px,2vw,24px);margin:0;letter-spacing:-.03em}p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}button{height:38px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);padding:0 12px;cursor:pointer;font-weight:650}button:hover{border-color:#0b89a866;box-shadow:0 8px 18px #0b89a81f}.primary{background:linear-gradient(135deg,#0b89a8,#16a7c8);color:#fff;border:0}
+    main{position:relative;min-height:0;border:1px solid var(--line);border-radius:22px;background:#fff;box-shadow:var(--shadow);overflow:hidden}.stage{height:100%;width:100%;overflow:hidden;cursor:grab;touch-action:none;background:linear-gradient(90deg,#eef3f8 1px,transparent 1px),linear-gradient(#eef3f8 1px,transparent 1px);background-size:28px 28px}.stage.dragging{cursor:grabbing}.canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}img{display:block;width:2048px;max-width:none;user-select:none;-webkit-user-drag:none;background:white;border-radius:12px;box-shadow:0 10px 35px #1720331a}.hud,.loading{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:14px;color:var(--muted);box-shadow:0 10px 30px #17203317}.hud{left:16px;bottom:16px;padding:9px 11px;font-size:13px}.loading{left:50%;top:50%;transform:translate(-50%,-50%);padding:14px 16px;color:var(--text)}.mini{position:absolute;right:16px;bottom:16px;width:220px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 10px 30px #17203317}.mini img{width:100%;border-radius:8px;box-shadow:none}.frame{position:absolute;border:2px solid var(--accent);background:#0b89a81a;border-radius:4px;pointer-events:none}
+    @media(max-width:760px){.app{padding:10px}header{align-items:flex-start;flex-direction:column}.controls{justify-content:flex-start}.mini{display:none}button{height:36px;padding:0 10px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header><div><h1>Sema Akış Diyagramı</h1><p>Yakınlaştır, sürükle, tam ekranda incele ve yazdır.</p></div><div class="controls"><button class="primary" id="fit">Ekrana sığdır</button><button id="zin">+</button><button id="zout">−</button><button id="one">%100</button><button id="full">Tam ekran</button><button id="print">Yazdır</button></div></header>
+    <main id="viewport"><div class="stage" id="stage"><div class="canvas" id="canvas"><img id="flow" alt="Akış diyagramı"></div></div><div class="loading" id="loading">Diyagram yükleniyor...</div><div class="hud" id="hud">Zoom: %100</div><div class="mini"><img id="miniImg" alt="Mini harita"><div class="frame" id="frame"></div></div></main>
+  </div>
+<script>
+(() => {
+  const paths=['chunks/flowchart-0.txt','chunks/flowchart-1.txt','chunks/flowchart-2.txt','chunks/flowchart-3.txt','chunks/flowchart-4.txt'];
+  const stage=document.getElementById('stage'), canvas=document.getElementById('canvas'), img=document.getElementById('flow'), miniImg=document.getElementById('miniImg'), hud=document.getElementById('hud'), frame=document.getElementById('frame'), viewport=document.getElementById('viewport'), loading=document.getElementById('loading');
+  let scale=1,x=0,y=0,down=false,lastX=0,lastY=0;
+  const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
+  function apply(){canvas.style.transform=`translate(${x}px,${y}px) scale(${scale})`;hud.textContent=`Zoom: %${Math.round(scale*100)}`;updateMini();}
+  function fit(){if(!img.naturalWidth)return;const r=stage.getBoundingClientRect();scale=Math.min((r.width-48)/img.naturalWidth,(r.height-48)/img.naturalHeight);scale=clamp(scale,.12,4);x=(r.width-img.naturalWidth*scale)/2;y=(r.height-img.naturalHeight*scale)/2;apply();}
+  function zoom(f,cx=stage.clientWidth/2,cy=stage.clientHeight/2){const ns=clamp(scale*f,.12,5), wx=(cx-x)/scale, wy=(cy-y)/scale;scale=ns;x=cx-wx*scale;y=cy-wy*scale;apply();}
+  function updateMini(){const mini=document.querySelector('.mini');if(!mini||!img.naturalWidth)return;const mr=mini.getBoundingClientRect(), sr=stage.getBoundingClientRect();const sx=mr.width/img.naturalWidth, sy=(mr.width*img.naturalHeight/img.naturalWidth)/img.naturalHeight;frame.style.left=8+Math.max(0,(-x/scale)*sx)+'px';frame.style.top=8+Math.max(0,(-y/scale)*sy)+'px';frame.style.width=Math.min(mr.width,(sr.width/scale)*sx)+'px';frame.style.height=Math.min(mr.width*img.naturalHeight/img.naturalWidth,(sr.height/scale)*sy)+'px';}
+  stage.addEventListener('pointerdown',e=>{down=true;lastX=e.clientX;lastY=e.clientY;stage.setPointerCapture(e.pointerId);stage.classList.add('dragging');});
+  stage.addEventListener('pointermove',e=>{if(!down)return;x+=e.clientX-lastX;y+=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;apply();});
+  stage.addEventListener('pointerup',()=>{down=false;stage.classList.remove('dragging');});
+  stage.addEventListener('wheel',e=>{e.preventDefault();const r=stage.getBoundingClientRect();zoom(e.deltaY<0?1.12:.88,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+  document.getElementById('fit').onclick=fit;document.getElementById('zin').onclick=()=>zoom(1.2);document.getElementById('zout').onclick=()=>zoom(.8);document.getElementById('one').onclick=()=>{scale=1;x=32;y=32;apply();};document.getElementById('full').onclick=()=>viewport.requestFullscreen?.();document.getElementById('print').onclick=()=>window.print();
+  Promise.all(paths.map(p=>fetch(p).then(r=>{if(!r.ok)throw new Error(p);return r.text()}))).then(parts=>{img.src='data:image/webp;base64,'+parts.join('').trim();miniImg.src=img.src;img.onload=()=>{loading.remove();fit();};}).catch(()=>{loading.textContent='Diyagram dosyaları yüklenemedi.'});
+  window.addEventListener('resize',fit);
+})();
+</script>
+</body>
+</html>
